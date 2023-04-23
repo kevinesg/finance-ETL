@@ -172,8 +172,8 @@
 4. run ETL
 
     - for the following steps, we are under the assumption that you are in the project root folder directory
-    - take a look at `gsheet-to-gcs-etl.py` and `gcs-to-gbq-etl.py`. the parameters are all at the top of each script. feel free to adjust other parts of the scripts as you deem necessary as well
-    - in this specific project, we can run `python gsheet-to-gcs-etl.py` then `gcs-to-gbq-etl.py`
+    - take a look at `gsheet_to_gcs_etl.py` and `gcs_to_gbq_etl.py`. the parameters are all at the top of each script. feel free to adjust other parts of the scripts as you deem necessary as well
+    - in this specific project, we can run `python flows/gsheet_to_gcs_etl.py` then `python flows/gcs_to_gbq_etl.py`
     - while and after running the scripts, you can observe the logs in the prefect UI
     - in your GCP console, you can check if the GCS Bucket in `Cloud Storage`>`Buckets` and GBQ in `BigQuery` successfully ingested the data
 
@@ -187,3 +187,46 @@
     - create a work pool in the `Work Pools` tab
     - enter `prefect agent start --pool POOL_NAME --work-queue WORK_QUEUE_NAME` where `POOL_NAME` is the work pool name you want to run and `WORK_QUEUE_NAME` is the name of the work queue (this can be seen in prefect UI (`Work Pools`>click on a workpool>`Work Queues` tab)). take note that this should already be existing in the prefect UI. if you didn't specify the work queue details, then it will run the whole work pool. you can specify the concurrency limit of each workpool in the prefect UI as well (in this project, I set it to 1 so that each ETL script will run in order). now that you have an active work pool, you should see that the deployment is running
     - you can also set a notification, say, for failed or crashed runs through the prefect UI. click `Notifications` then `Create Notification`
+
+#
+# Part III: docker deployment
+
+1. create `requirements.txt`
+
+    - while still inside the conda environment, in the project root folder directory, enter `pip freeze > docker-requirements.txt`. feel free to rename the txt file
+
+2. build a local docker image
+
+    - create a new file in the project root folder directory named `Dockerfile`
+    - inside the file, specify the needed steps to form the docker image
+    - in your terminal, enter `docker build -t USERNAME/NAME:TAG .` where `USERNAME` is your dockerhub username, `NAME` is your preferred image name, and `TAG` is an optional descriptive tag
+
+3. push local docker image to dockerhub
+
+    - if you don't have an account yet, go to the [official site](https://hub.docker.com) to register
+    - log in to dockerhub
+    - on the top bar, click `Repositories` then create a repository which will be used to push the docker image
+    - in your terminal, enter `docker login` then enter your login credentials
+    - enter `docker push USERNAME/NAME:TAG`. this step might take a while depending on internet connection speed
+
+4. create a docker block in prefect
+
+    - create a new block and choose `Docker Container`
+    - in the Image section, enter `USERNAME/NAME:TAG`
+    - in the ImagePullPolicy section, choose `ALWAYS`
+    - after you're done configuring the settings, click `Create`
+    - copy the generated code block
+
+5. create docker deployments for each main flow
+
+    - take a look at the `flows/docker_deploy.py` file. you should create a similar file (it can be renamed as well). as you can see, the copied generated code block from the previous step is present here. in this file, we are creating docker deployment for each main flow
+    - once the file is ready, run the python script
+    - you should now see the docker deployments in the prefect UI
+
+6. access docker prefect in local prefect
+
+    - the reference for this part is the [prefect docs](https://docs.prefect.io/latest/concepts/settings/)
+    - in your terminal, enter `prefect config set PREFECT_API_URL="http://127.0.0.1:4200/api"` so that you can access docker prefect using your local prefect UI
+    - if instead you want to use cloud instead of local, enter `prefect config set PREFECT_API_URL="https://api.prefect.cloud/api/accounts/[ACCOUNT-ID]/workspaces/[WORKSPACE-ID]"`
+    - enter `prefect agent -q default`
+    - in another terminal, still in the project root folder directory, enter `prefect deployment run DOCKER_DEPLOYMENT_NAME` where `DOCKER_DEPLOYMENT_NAME` is the whole deployment name. you can check if it is reflected in the local prefect UI. but in reality, this is being ran in the docker
