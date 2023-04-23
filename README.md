@@ -1,5 +1,7 @@
 # finance-etl
 
+# Part I: initial setup of GCP VM
+
 1. generate SSH keys
     - go to [https://cloud.google.com/compute/docs/connect/create-ssh-keys](https://cloud.google.com/compute/docs/connect/create-ssh-keys) for instructions
     - as mentioned in the docs, input `ssh-keygen -t rsa -f ~/.ssh/KEY_FILENAME -C USERNAME -b 2048` into your linux terminal or bash (change `KEY_FILENAME` and `USERNAME` to whatever you want)
@@ -121,3 +123,67 @@
     - open the command pallete (at the top bar, click `View`>`Command Palette`)
     - enter `remote ssh` then find and click `Connect to Host`, then choose your SSH `NAME` from earlier
     - a new `VS Code` window should pop up, confirming successful remote SSH
+
+#
+# Part II: local Prefect deployment
+
+1. setup conda environment
+
+    - in your terminal, enter `conda env create -f environment.yml -n ENV_NAME`. the `environment.yml` file was generated from my existing conda environment which contains the necessary libraries. `ENV_NAME` is your own environment name
+    - enter `conda activate ENV_NAME` to activate your environment
+
+2. create a GCS Bucket
+
+    - go to `Cloud Storage`>`Buckets`
+    - click `CREATE BUCKET`
+    - choose a bucket name then save
+
+3. create a prefect block
+
+    - in your terminal, enter `prefect server start`
+    - go to the link displayed to access prefect UI
+    - on the left bar, click `Blocks`
+    - create a new block and choose `GCS Bucket`
+    - enter your preferred block name. make sure your bucket name is the same as your GCS Bucket name
+    - click the button to add GCP credentials
+    - enter your preferred block name
+    - enter the service account info
+    
+        - in your GCP console, go to `IAM & Admin`>`Service Accounts`
+        - click the three dots then click `+ CREATE SERVICE ACCOUNT`
+        - enter your desired service account name
+        - click `CONTINUE`
+        - add the following roles:
+        
+            - BigQuery Admin
+            - Storage Admin
+            - Storage Object Viewer
+        
+        - click `CONTINUE` then `DONE`
+    
+    - click the service account then go to `KEYS` tab. click `ADD KEY`
+    - choose the JSON format. the file will automatically be downloaded to your PC
+    - open the JSON file then copy and paste the contents to the service account info of prefect
+    - click `CREATE`
+    - choose your newly-added GCP credentials
+    - click `CREATE`
+    - prefect also provides the needed code snippet that we can use in our scripts
+
+4. run ETL
+
+    - for the following steps, we are under the assumption that you are in the project root folder directory
+    - take a look at `gsheet-to-gcs-etl.py` and `gcs-to-gbq-etl.py`. the parameters are all at the top of each script. feel free to adjust other parts of the scripts as you deem necessary as well
+    - in this specific project, we can run `python gsheet-to-gcs-etl.py` then `gcs-to-gbq-etl.py`
+    - while and after running the scripts, you can observe the logs in the prefect UI
+    - in your GCP console, you can check if the GCS Bucket in `Cloud Storage`>`Buckets` and GBQ in `BigQuery` successfully ingested the data
+
+5. prefect deployment
+
+    - after confirming that your ETL scripts work as intended, you are now ready to setup prefect deployment. you can refer to [prefect docs](https://docs.prefect.io/latest/concepts/deployments/) as well
+    - enter `prefect deployment build ETL_FILE:ENTRY_POINT_FLOW -n 'NAME'` where `ETL_FILE` is the path to your ETL script, `ENTRY_POINT_FLOW` is the name of the flow you want to run, and `NAME` is the name you want to assign to the deployment. for more info, you can enter `prefect build --help`
+    - the previous step will generate a yaml file. feel free to inspect it. enter parameters here (in python dictionary format)
+    - once you're satisfied with the parameters, enter `prefect deployment apply YAML_FILE_NAME` to create a prefect deployment which can be seen in the prefect UI
+    - in your prefect UI, go to `Deployments`. you can schedule the deployment runs by clicking the three dots then click `Edit`. there are other configurations as well like your preferred work pool, etc. click the three dots menu of the deployment you created, then click `Quick run`. you will observe that it's not running yet, it's just scheduled. this is because there's no work pool active yet
+    - create a work pool in the `Work Pools` tab
+    - enter `prefect agent start --pool POOL_NAME --work-queue WORK_QUEUE_NAME` where `POOL_NAME` is the work pool name you want to run and `WORK_QUEUE_NAME` is the name of the work queue (this can be seen in prefect UI (`Work Pools`>click on a workpool>`Work Queues` tab)). take note that this should already be existing in the prefect UI. if you didn't specify the work queue details, then it will run the whole work pool. you can specify the concurrency limit of each workpool in the prefect UI as well (in this project, I set it to 1 so that each ETL script will run in order). now that you have an active work pool, you should see that the deployment is running
+    - you can also set a notification, say, for failed or crashed runs through the prefect UI. click `Notifications` then `Create Notification`
