@@ -180,7 +180,7 @@
 5. prefect deployment
 
     - after confirming that your ETL scripts work as intended, you are now ready to setup prefect deployment. you can refer to [prefect docs](https://docs.prefect.io/latest/concepts/deployments/) as well
-    - enter `prefect deployment build ETL_FILE:ENTRY_POINT_FLOW -n 'NAME'` where `ETL_FILE` is the path to your ETL script, `ENTRY_POINT_FLOW` is the name of the flow you want to run, and `NAME` is the name you want to assign to the deployment. for more info, you can enter `prefect build --help`
+    - enter `prefect deployment build ETL_FILE:ENTRY_POINT_FLOW -n 'NAME'` where `ETL_FILE` is the path to your ETL script, `ENTRY_POINT_FLOW` is the name of the flow you want to run, and `NAME` is the name you want to assign to the deployment. for more info, you can enter `prefect build --help`. you might need to adjust the command depending on the current directory in your terminal relative to the `ETL_FILE`. in this specific project, i made a `deployment/` folder which contains the yaml files generated in this step. that means i didn't follow the exact command because of the additional folder
     - the previous step will generate a yaml file. feel free to inspect it. enter parameters here (in python dictionary format)
     - once you're satisfied with the parameters, enter `prefect deployment apply YAML_FILE_NAME` to create a prefect deployment which can be seen in the prefect UI
     - in your prefect UI, go to `Deployments`. you can schedule the deployment runs by clicking the three dots then click `Edit`. there are other configurations as well like your preferred work pool, etc. click the three dots menu of the deployment you created, then click `Quick run`. you will observe that it's not running yet, it's just scheduled. this is because there's no work pool active yet
@@ -228,5 +228,5 @@
     - the reference for this part is the [prefect docs](https://docs.prefect.io/latest/concepts/settings/)
     - in your terminal, enter `prefect config set PREFECT_API_URL="http://127.0.0.1:4200/api"` so that you can access docker prefect using your local prefect UI
     - if instead you want to use cloud instead of local, enter `prefect config set PREFECT_API_URL="https://api.prefect.cloud/api/accounts/[ACCOUNT-ID]/workspaces/[WORKSPACE-ID]"`
-    - enter `prefect agent -q default`
+    - enter `prefect agent start -q default`
     - in another terminal, still in the project root folder directory, enter `prefect deployment run DOCKER_DEPLOYMENT_NAME` where `DOCKER_DEPLOYMENT_NAME` is the whole deployment name. you can check if it is reflected in the local prefect UI. but in reality, this is being ran in the docker
