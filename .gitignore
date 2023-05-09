@@ -1,4 +1,6 @@
 __pycache__/
-credentials/*.json
+credentials/*
+!credentials/.gitkeep
 data/raw/*
+!data/raw/.gitkeep
 flows/__pycache__/
