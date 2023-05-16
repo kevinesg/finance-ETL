@@ -162,6 +162,7 @@
         
         - click `CONTINUE` then `DONE`
     
+    - in my case, since I'm using a googlesheet as a data source, I have to follow the [gspread documentation](https://docs.gspread.org/en/latest/oauth2.html) to have permission to read the googlesheet
     - click the service account then go to `KEYS` tab. click `ADD KEY`
     - choose the JSON format. the file will automatically be downloaded to your PC
     - open the JSON file then copy and paste the contents to the service account info of prefect
