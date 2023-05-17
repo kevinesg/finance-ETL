@@ -239,3 +239,16 @@
     - if instead you want to use cloud instead of local, enter `prefect config set PREFECT_API_URL="https://api.prefect.cloud/api/accounts/[ACCOUNT-ID]/workspaces/[WORKSPACE-ID]"`
     - enter `prefect agent start -q default`
     - in another terminal, still in the project root folder directory, enter `prefect deployment run DOCKER_DEPLOYMENT_NAME` where `DOCKER_DEPLOYMENT_NAME` is the whole deployment name. you can check if it is reflected in the local prefect UI. but in reality, this is being ran in the docker
+
+#
+# Part IV: dbt
+
+1. initial setup
+
+    - install `dbt-core` using `pip` or `conda` in a virtual environment of choice
+    - install a dbt connector as well. in my case, i installed `dbt-bigquery` to connect to Google BigQuery
+    - create an empty git repository in github (or gitlab, etc.) and clone it
+    - change your working directory to the empty git folder
+    - create a `.dbt` folder in your home directory. in my case, i enter `mkdir ~/home/.dbt` in the terminal
+    - initialize a dbt project by using the terminal command `dbt init PROJECT_NAME` where `PROJECT_NAME` is the name of your project. it will create a folder with that name. you will have to answer each prompt to complete the initial dbt setup
+    - 

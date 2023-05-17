@@ -1,7 +1,8 @@
 __pycache__/
 credentials/*
 !credentials/.gitkeep
-data/raw/*
-!data/raw/.gitkeep
-flows/__pycache__/
-dev/*
+prefect-docker/data/raw/*
+!prefect-docker/data/raw/.gitkeep
+prefect-docker/flows/__pycache__/
+prefect-docker/dev/*
+prefect-docker/Dockerfile
